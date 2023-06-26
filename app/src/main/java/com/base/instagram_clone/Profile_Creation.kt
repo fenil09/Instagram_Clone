@@ -8,18 +8,20 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import com.base.instagram_clone.Data.Users
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import de.hdodenhof.circleimageview.CircleImageView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 
 class Profile_Creation : AppCompatActivity() {
     lateinit var mauth:FirebaseAuth
     lateinit var circularimage:CircleImageView
+    var firestorereff=Firebase.firestore.collection("Users")
     var profileuri: Uri? =null
     val reqcode:Int=100
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +46,6 @@ class Profile_Creation : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if(resultCode== RESULT_OK && requestCode==reqcode){
-
             data?.data?.let {
                 profileuri=it
             }
@@ -59,8 +60,13 @@ class Profile_Creation : AppCompatActivity() {
         mauth.currentUser?.let {
             it.updateProfile(profileupdates).await()
             withContext(Dispatchers.Main){
+                val user=Users(username,profileimageUri)
                 circularimage.setImageURI(it.photoUrl)
+                firestorereff.add(user)
                 Toast.makeText(this@Profile_Creation,"User Profile setuped successfully",Toast.LENGTH_LONG).show()
+                delay(2000)
+                val intent=Intent(this@Profile_Creation,Home::class.java)
+                startActivity(intent)
             }
         }
     }
